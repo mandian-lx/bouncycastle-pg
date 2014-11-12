@@ -5,7 +5,7 @@ Name:          bouncycastle-pg
 Version:       1.46
 Release:       10%{?dist}
 Summary:       Bouncy Castle OpenPGP API
-Group:         Development/Libraries
+Group:         System/Libraries
 # modified BZIP2 library org/bouncycastle/apache/bzip2 ASL 2.0
 License:       ASL 2.0 and MIT
 URL:           http://www.bouncycastle.org/
