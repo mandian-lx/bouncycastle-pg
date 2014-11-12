@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ====================================================================== -->
+<!-- bcpg 1.46 by gil -->
+<!-- ====================================================================== -->
+
+<project name="build-bcpg" default="package" basedir=".">
+
+  <!-- ====================================================================== -->
+  <!-- Build environment properties                                           -->
+  <!-- ====================================================================== -->
+
+
+  <property name="build.version" value="1.46"/>
+  <property name="jar.name" value="bcpg"/>
+  <property name="build.dir" value="build"/>
+  <property name="build.classes" value="${build.dir}/classes"/>
+  <property name="build.src" value="src/java"/>
+  <property name="build.test.classes" value="${build.dir}/test-classes"/>
+  <property name="build.test.src" value="src/test"/>
+  <property name="test.reports" value="${build.dir}/test-reports"/>
+  <property name="reporting.apis" value="${build.dir}/apidocs"/>
+
+  <property name="j2se.api" value="http://java.sun.com/j2se/1.4.2/docs/api/"/>
+
+  <!-- ====================================================================== -->
+  <!-- Defining classpaths                                                    -->
+  <!-- ====================================================================== -->
+
+  <path id="build.classpath">
+    <fileset dir="/usr/share/java">
+      <include name="bcprov.jar"/>
+    </fileset>
+  </path>
+  <path id="build.test.classpath">
+    <path refid="build.classpath"/>
+    <fileset dir="/usr/share/java">
+      <include name="junit.jar"/>
+      <include name="ant/ant-junit.jar"/>
+    </fileset>
+  </path>
+  <path id="javadoc.classpath">
+    <path refid="build.classpath"/>
+    <fileset dir="${build.dir}" includes="${jar.name}.jar"/>
+  </path>
+  
+  <!-- ====================================================================== -->
+  <!-- Cleaning up target                                                     -->
+  <!-- ====================================================================== -->
+
+  <target name="clean" description="Clean the output directory">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Compilation target                                                     -->
+  <!-- ====================================================================== -->
+
+  <target name="compile" description="Compile the code">
+    <mkdir dir="${build.classes}"/>
+    <javac destdir="${build.classes}" 
+           nowarn="false" 
+           debug="true" 
+           optimize="false" 
+           deprecation="true" 
+           target="1.5" 
+           verbose="false" 
+           fork="false" 
+           source="1.5">
+      <src>
+        <pathelement location="${build.src}"/>
+      </src>
+      <classpath refid="build.classpath"/>
+    </javac>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Test-compilation target                                                -->
+  <!-- ====================================================================== -->
+
+  <target name="compile-tests" 
+          depends="compile" 
+          description="Compile the test code" 
+          unless="test.skip">
+    <mkdir dir="${build.test.classes}"/>
+    <javac destdir="${build.test.classes}" 
+           nowarn="false" 
+           debug="true" 
+           optimize="false" 
+           deprecation="true" 
+           target="1.5" 
+           verbose="false" 
+           fork="false" 
+           source="1.5">
+      <src>
+        <pathelement location="${build.test.src}"/>
+      </src>
+      <classpath>
+        <path refid="build.test.classpath"/>
+        <pathelement location="${build.classes}"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Run all tests                                                          -->
+  <!-- ====================================================================== -->
+
+  <target name="test" 
+          depends="compile-tests, junit-missing" 
+          unless="junit.skipped" 
+          description="Run the test cases">
+    <mkdir dir="${test.reports}"/>
+    <junit printSummary="yes" haltonerror="true" haltonfailure="true" fork="true" dir=".">
+      <sysproperty key="basedir" value="."/>
+      <formatter type="xml"/>
+      <formatter type="plain" usefile="false"/>
+      <classpath>
+        <path refid="build.test.classpath"/>
+        <pathelement location="${build.classes}"/>
+        <pathelement location="${build.test.classes}"/>
+      </classpath>
+      <formatter type="brief" usefile="no"/>
+      <batchtest haltonfailure="yes">
+        <fileset dir="${build.test.src}">
+          <include name="**/AllTests.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="test-junit-present">
+    <available file="/usr/share/java/junit.jar" property="junit.present"/>
+  </target>
+
+  <target name="test-junit-status" 
+          depends="test-junit-present">
+    <condition property="junit.missing">
+      <and>
+        <isfalse value="${junit.present}"/>
+        <isfalse value="${test.skip}"/>
+      </and>
+    </condition>
+    <condition property="junit.skipped">
+      <or>
+        <isfalse value="${junit.present}"/>
+        <istrue value="${test.skip}"/>
+      </or>
+    </condition>
+  </target>
+
+  <target name="junit-missing" 
+          depends="test-junit-status" 
+          if="junit.missing">
+    <echo>=================================== WARNING ===================================</echo>
+    <echo> JUnit is not present in your $ANT_HOME/lib directory. Tests not executed.</echo>
+    <echo>===============================================================================</echo>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Javadoc target                                                         -->
+  <!-- ====================================================================== -->
+
+  <target name="javadoc" description="Generates the Javadoc of the application">
+    <javadoc sourcepath="${build.src}"
+             packagenames="*" 
+             destdir="${reporting.apis}" 
+             access="protected" 
+             old="false" 
+             verbose="false" 
+             version="true" 
+             use="true" 
+             author="true" 
+             splitindex="false" 
+             nodeprecated="false" 
+             nodeprecatedlist="false" 
+             notree="false" 
+             noindex="false" 
+             nohelp="false" 
+             nonavbar="false" 
+             serialwarn="false" 
+             charset="ISO-8859-1" 
+             source="1.4" 
+             linksource="false" 
+             breakiterator="false">
+             <classpath refid="javadoc.classpath"/>
+             <doctitle><![CDATA[<h1>Bouncy Castle Cryptography Library ${build.version} API</h1>]]></doctitle>
+             <link href="${j2se.api}"/>
+    </javadoc>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- Package target                                                         -->
+  <!-- ====================================================================== -->
+
+ <taskdef resource="aQute/bnd/ant/taskdef.properties" >
+    <classpath>
+     <fileset dir="/usr/share/java" includes="aqute-bnd.jar" />
+    </classpath>
+  </taskdef>
+  
+  <target name="package" depends="compile,test" description="Package the application">
+    <bnd
+         classpath="${build.classes}"
+         failok="false"
+         exceptions="false"
+         files="bcpg.bnd"
+         output="${build.dir}/${jar.name}.jar"/>
+  </target>
+
+  <!-- ====================================================================== -->
+  <!-- A dummy target for the package named after the type it creates         -->
+  <!-- ====================================================================== -->
+
+  <target name="jar" depends="package" description="Builds the jar for the application"/>
+
+</project>
