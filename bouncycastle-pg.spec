@@ -1,3 +1,4 @@
+%{?_javapackages_macros:%_javapackages_macros}
 %global ver 146
 %global archivever  jdk16-%(echo %{ver}|sed 's|\\\.||')
 Name:          bouncycastle-pg
