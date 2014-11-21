@@ -1,2 +1,4 @@
 sources:
-  "bcpg-jdk16-146.tar.gz": d1696912f89034332a9e7c457ffd7debe823a298
+  bcpg-jdk15on-1.50.pom: 153f11c4098ce518606310316567024ce507c4e7
+  bcpg-jdk15on-150.tar.gz: 8802f8e34617d39b619eff2ab1f7b91ecb7f71ac
+  bouncycastle-pg-1.50-01-build.xml: 0165495e4a2e1229438dfb2faf386ea3557041d2
