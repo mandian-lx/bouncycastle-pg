@@ -48,7 +48,7 @@ This package contains javadoc for %{name}.
 # Unzip source and test suite resources
 mkdir -p src/java src/test
 unzip -qq src.zip -d src/java
-unzip -qq %{SOURCE1} 'org/bouncycastle/openpgp/*' -x '*.class' -d src/java
+unzip -qq %{SOURCE1} 'org/bouncycastle/openpgp/**' -x '**.class' -d src/java
 
 mkdir -p src/test/org/bouncycastle/openpgp/examples
 mv src/java/org/bouncycastle/openpgp/test \
