@@ -1,4 +1,6 @@
 sources:
-  bcpg-jdk15on-1.50.pom: 153f11c4098ce518606310316567024ce507c4e7
-  bcpg-jdk15on-150.tar.gz: 8802f8e34617d39b619eff2ab1f7b91ecb7f71ac
-  bouncycastle-pg-1.50-01-build.xml: 0165495e4a2e1229438dfb2faf386ea3557041d2
+  bcpg-jdk15on-1.54.pom:	6167b7ade45a625afb41b0fd95f1e48800a26dfd
+  bcpg-jdk15on-154.tar.gz:	d78c3430ee255678b364fd4ca16230069b5212b7
+  bctest-jdk15on-154.jar:	216ae5805aa03415c17a5332e6e5a0b9fc711098
+  bouncycastle-pg-build.xml:	7ee829b754519bba8410630616eb8e099cad3f7e
+  bouncycastle-pg-OSGi.bnd:	3d08551274e35f04aa0ac0b9270188ef8b8dd4ff
