@@ -1,33 +1,33 @@
 %{?_javapackages_macros:%_javapackages_macros}
-%global ver 150
+
+%global ver 1.54
 %global archivever  jdk15on-%(echo %{ver}|sed 's|\\\.||')
 
 Name:          bouncycastle-pg
-Version:       1.50
-Release:       4%{?dist}
+Version:       %{ver}
+Release:       1
 Summary:       Bouncy Castle OpenPGP API
 # modified BZIP2 library org/bouncycastle/apache/bzip2 ASL 2.0
 License:       ASL 2.0 and MIT
 URL:           http://www.bouncycastle.org/
-Source0:       http://www.bouncycastle.org/download/bcpg-%{archivever}.tar.gz
-Source1:       http://repo2.maven.org/maven2/org/bouncycastle/bcpg-jdk15on/%{version}/bcpg-jdk15on-%{version}.pom
-Source2:       bouncycastle-pg-%{version}-01-build.xml
-Source3:       bouncycastle-pg-%{version}-OSGi.bnd
 
-BuildRequires: java-devel
-BuildRequires: javapackages-tools
+# Source tarball contains everything except test suite rousources
+Source0:       http://www.bouncycastle.org/download/bcpg-%{archivever}.tar.gz
+# Test suite resources are found in this jar
+Source1:       http://www.bouncycastle.org/download/bctest-%{archivever}.jar
+
+Source2:       http://repo2.maven.org/maven2/org/bouncycastle/bcpg-jdk15on/%{version}/bcpg-jdk15on-%{version}.pom
+Source3:       bouncycastle-pg-build.xml
+Source4:       bouncycastle-pg-OSGi.bnd
 
 BuildRequires: ant
 BuildRequires: ant-junit
 BuildRequires: aqute-bnd
+BuildRequires: javapackages-local
 BuildRequires: junit
+BuildRequires: mvn(org.bouncycastle:bcprov-jdk15on) = %{version}
+Requires:      mvn(org.bouncycastle:bcprov-jdk15on) = %{version}
 
-BuildRequires: bouncycastle = %{version}
-
-Requires:      bouncycastle = %{version}
-
-Requires:      java-headless
-Requires:      javapackages-tools
 BuildArch:     noarch
 
 %description
@@ -44,62 +44,93 @@ This package contains javadoc for %{name}.
 
 %prep
 %setup -q -n bcpg-%{archivever}
-# fixing incomplete source directory structure
+
+# Unzip source and test suite resources
 mkdir -p src/java src/test
 unzip -qq src.zip -d src/java
+unzip -qq %{SOURCE1} 'org/bouncycastle/openpgp/*' -x '*.class' -d src/java
 
-mkdir -p src/test/org/bouncycastle/openpgp/test
-mv src/java/org/bouncycastle/openpgp/test/* \
-  src/test/org/bouncycastle/openpgp/test
-mkdir -p src/test/org/bouncycastle/openpgp/examples/test
-mv src/java/org/bouncycastle/openpgp/examples/test/* \
-  src/test/org/bouncycastle/openpgp/examples/test
+mkdir -p src/test/org/bouncycastle/openpgp/examples
+mv src/java/org/bouncycastle/openpgp/test \
+  src/test/org/bouncycastle/openpgp/
+mv src/java/org/bouncycastle/openpgp/examples/test \
+  src/test/org/bouncycastle/openpgp/examples/
 
 # Remove provided binaries and apidocs
 find . -type f -name "*.class" -exec rm -f {} \;
 find . -type f -name "*.jar" -exec rm -f {} \;
-rm -rf docs/*
+rm -rf docs/* javadocs/*
 
-cp -p %{SOURCE2} build.xml
-cp -p %{SOURCE3} bcpg.bnd
+cp -p %{SOURCE3} build.xml
+cp -p %{SOURCE4} bcpg.bnd
+sed -i "s|@VERSION@|%{version}|" build.xml bcpg.bnd
 
-# this test fails: bc.test.data.home property not set
-rm src/test/org/bouncycastle/openpgp/test/DSA2Test.java
-sed -i "s|suite.addTestSuite(DSA2Test.class);|//&|" \
-  src/test/org/bouncycastle/openpgp/test/AllTests.java
+# this test fails: source encoding error
 rm src/test/org/bouncycastle/openpgp/test/PGPUnicodeTest.java
 sed -i "s|suite.addTestSuite(PGPUnicodeTest.class);|//&|" \
   src/test/org/bouncycastle/openpgp/test/AllTests.java
 
-# another failing test
-# missing resource "bigpub.asc"
-rm src/test/org/bouncycastle/openpgp/test/PGPParsingTest.java
-sed -i 's/new PGPParsingTest()//' src/test/org/bouncycastle/openpgp/test/RegressionTest.java
-
 %build
-
-ant jar javadoc
+mkdir lib
+build-jar-repository -s -p lib bcprov junit ant/ant-junit aqute-bnd
+ant -Dbc.test.data.home=$(pwd)/src/test jar javadoc
 
 %install
-
-mkdir -p %{buildroot}%{_javadir}
-install -pm 644 build/bcpg.jar %{buildroot}%{_javadir}/bcpg.jar
-
-mkdir -p %{buildroot}%{_javadocdir}/%{name}
-cp -pr build/apidocs/* %{buildroot}%{_javadocdir}/%{name}
-
-mkdir -p %{buildroot}%{_mavenpomdir}
-install -pm 644 %{SOURCE1} %{buildroot}%{_mavenpomdir}/JPP-bcpg.pom
-%add_maven_depmap -a "org.bouncycastle:bcpg-jdk16,org.bouncycastle:bcpg-jdk15" JPP-bcpg.pom bcpg.jar
+%mvn_file org.bouncycastle:bcpg-jdk15on bcpg
+%mvn_alias org.bouncycastle:bcpg-jdk15on org.bouncycastle:bcpg-jdk16 org.bouncycastle:bcpg-jdk15
+%mvn_artifact %{SOURCE2} build/bcpg.jar
+%mvn_install -J build/apidocs
 
 %files -f .mfiles
-%doc *.html
+%doc CONTRIBUTORS.html index.html
+%license LICENSE.html
 
-%files javadoc
-%{_javadocdir}/%{name}
-%doc LICENSE.html
+%files javadoc -f .mfiles-javadoc
+%license LICENSE.html
 
 %changelog
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.54-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Thu Apr 07 2016 Mat Booth <mat.booth@redhat.com> - 1.54-1
+- Update to 1.54
+- Fix most of the test failures
+
+* Wed Feb 03 2016 Fedora Release Engineering <releng@fedoraproject.org> - 1.52-9
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Fri Jul 17 2015 gil cattaneo <puntogil@libero.it> 1.52-8
+- remove the OSGi deprecated entry in bnd properties file
+
+* Thu Jul 16 2015 gil cattaneo <puntogil@libero.it> 1.52-7
+- add BR aqute-bndlib
+- disable doclint
+
+* Thu Jul 16 2015 Michael Simacek <msimacek@redhat.com> - 1.52-6
+- Use aqute-bnd-2.4.1
+
+* Tue Jun 23 2015 gil cattaneo <puntogil@libero.it> 1.52-5
+- dropped the Export/Import-Package lists in the bnd properties file
+
+* Thu Jun 18 2015 gil cattaneo <puntogil@libero.it> 1.52-4
+- fix OSGi export
+
+* Wed Jun 17 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.52-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
+* Wed Apr 22 2015 gil cattaneo <puntogil@libero.it> 1.52-2
+- Use javapackages macros
+
+* Wed Apr 22 2015 Alexander Kurtakov <akurtako@redhat.com> 1.52-1
+- Update to 1.52.
+- Bump source/target to 1.6 as 1.5 is target for removal in Java 9
+
+* Thu Jan 29 2015 gil cattaneo <puntogil@libero.it> 1.50-6
+- install license file in main package
+
+* Thu Jan 29 2015 gil cattaneo <puntogil@libero.it> 1.50-5
+- introduce license macro
+
 * Wed Oct 22 2014 Mikolaj Izdebski <mizdebsk@redhat.com> - 1.50-4
 - Add alias for org.bouncycastle:bcpg-jdk15
 
@@ -146,4 +177,3 @@ install -pm 644 %{SOURCE1} %{buildroot}%{_mavenpomdir}/JPP-bcpg.pom
 
 * Sun Mar 25 2012 gil cattaneo <puntogil@libero.it> 1.46-1
 - initial rpm
-

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!-- ====================================================================== -->
-<!-- bcpg 1.46 by gil -->
+<!-- bcpg by gil -->
 <!-- ====================================================================== -->
 
 <project name="build-bcpg" default="package" basedir=".">
@@ -11,32 +11,32 @@
   <!-- ====================================================================== -->
 
 
-  <property name="build.version" value="1.46"/>
-  <property name="jar.name" value="bcpg"/>
-  <property name="build.dir" value="build"/>
-  <property name="build.classes" value="${build.dir}/classes"/>
-  <property name="build.src" value="src/java"/>
+  <property name="build.version"      value="@VERSION@"/>
+  <property name="jar.name"           value="bcpg"/>
+  <property name="build.dir"          value="build"/>
+  <property name="build.classes"      value="${build.dir}/classes"/>
+  <property name="build.src"          value="src/java"/>
   <property name="build.test.classes" value="${build.dir}/test-classes"/>
-  <property name="build.test.src" value="src/test"/>
-  <property name="test.reports" value="${build.dir}/test-reports"/>
-  <property name="reporting.apis" value="${build.dir}/apidocs"/>
-
-  <property name="j2se.api" value="http://java.sun.com/j2se/1.4.2/docs/api/"/>
+  <property name="build.test.src"     value="src/test"/>
+  <property name="build.jvm"          value="1.6"/>
+  <property name="test.reports"       value="${build.dir}/test-reports"/>
+  <property name="reporting.apis"     value="${build.dir}/apidocs"/>
+  <property name="j2se.api"           value="/usr/share/javadoc/java"/>
 
   <!-- ====================================================================== -->
   <!-- Defining classpaths                                                    -->
   <!-- ====================================================================== -->
 
   <path id="build.classpath">
-    <fileset dir="/usr/share/java">
+    <fileset dir="lib">
       <include name="bcprov.jar"/>
     </fileset>
   </path>
   <path id="build.test.classpath">
     <path refid="build.classpath"/>
-    <fileset dir="/usr/share/java">
+    <fileset dir="lib">
       <include name="junit.jar"/>
-      <include name="ant/ant-junit.jar"/>
+      <include name="ant_ant-junit.jar"/>
     </fileset>
   </path>
   <path id="javadoc.classpath">
@@ -63,10 +63,10 @@
            debug="true" 
            optimize="false" 
            deprecation="true" 
-           target="1.5" 
+           target="${build.jvm}" 
            verbose="false" 
            fork="false" 
-           source="1.5">
+           source="${build.jvm}">
       <src>
         <pathelement location="${build.src}"/>
       </src>
@@ -88,10 +88,10 @@
            debug="true" 
            optimize="false" 
            deprecation="true" 
-           target="1.5" 
+           target="${build.jvm}" 
            verbose="false" 
            fork="false" 
-           source="1.5">
+           source="${build.jvm}">
       <src>
         <pathelement location="${build.test.src}"/>
       </src>
@@ -100,6 +100,9 @@
         <pathelement location="${build.classes}"/>
       </classpath>
     </javac>
+    <copy todir="${build.test.classes}">
+      <fileset dir="${build.test.src}" includes="**/*.asc,**/*.gpg,**/*.pub,**/*.txt,**/*.sec" />
+    </copy>
   </target>
 
   <!-- ====================================================================== -->
@@ -110,9 +113,11 @@
           depends="compile-tests, junit-missing" 
           unless="junit.skipped" 
           description="Run the test cases">
+    <delete dir="${test.reports}"/>
     <mkdir dir="${test.reports}"/>
     <junit printSummary="yes" haltonerror="true" haltonfailure="true" fork="true" dir=".">
       <sysproperty key="basedir" value="."/>
+      <sysproperty key="bc.test.data.home" value="${bc.test.data.home}"/>
       <formatter type="xml"/>
       <formatter type="plain" usefile="false"/>
       <classpath>
@@ -121,7 +126,7 @@
         <pathelement location="${build.test.classes}"/>
       </classpath>
       <formatter type="brief" usefile="no"/>
-      <batchtest haltonfailure="yes">
+      <batchtest todir="${test.reports}" haltonfailure="yes">
         <fileset dir="${build.test.src}">
           <include name="**/AllTests.java"/>
         </fileset>
@@ -130,7 +135,7 @@
   </target>
 
   <target name="test-junit-present">
-    <available file="/usr/share/java/junit.jar" property="junit.present"/>
+    <available file="lib/junit.jar" property="junit.present"/>
   </target>
 
   <target name="test-junit-status" 
@@ -166,7 +171,7 @@
              packagenames="*" 
              destdir="${reporting.apis}" 
              access="protected" 
-             old="false" 
+             old="false"
              verbose="false" 
              version="true" 
              use="true" 
@@ -178,13 +183,13 @@
              noindex="false" 
              nohelp="false" 
              nonavbar="false" 
-             serialwarn="false" 
-             charset="ISO-8859-1" 
-             source="1.4" 
+             serialwarn="false"
+             source="${build.jvm}"
              linksource="false" 
+             additionalparam="-Xdoclint:none"
              breakiterator="false">
              <classpath refid="javadoc.classpath"/>
-             <doctitle><![CDATA[<h1>Bouncy Castle Cryptography Library ${build.version} API</h1>]]></doctitle>
+             <doctitle><![CDATA[<h1>Bouncy Castle Cryptography Library ${build.version} API Specification</h1>]]></doctitle>
              <link href="${j2se.api}"/>
     </javadoc>
   </target>
@@ -193,9 +198,10 @@
   <!-- Package target                                                         -->
   <!-- ====================================================================== -->
 
- <taskdef resource="aQute/bnd/ant/taskdef.properties" >
+  <taskdef resource="aQute/bnd/ant/taskdef.properties" >
     <classpath>
-     <fileset dir="/usr/share/java" includes="aqute-bnd.jar" />
+      <fileset dir="lib" includes="aqute-bndbiz.aQute.bnd.jar" />
+      <fileset dir="lib" includes="aqute-bndbiz.aQute.bndlib.jar" />
     </classpath>
   </taskdef>
   
@@ -215,3 +221,4 @@
   <target name="jar" depends="package" description="Builds the jar for the application"/>
 
 </project>
+
