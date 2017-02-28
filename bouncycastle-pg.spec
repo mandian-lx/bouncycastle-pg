@@ -24,7 +24,7 @@ Patch0:        %{name}-1.54-fix_missing_bnd.patch
 BuildRequires: ant
 BuildRequires: ant-junit
 BuildRequires: aqute-bnd
-BuildRequires: javapackages-local
+BuildRequires: jpackage-utils
 BuildRequires: junit
 BuildRequires: mvn(org.bouncycastle:bcprov-jdk15on) = %{version}
 Requires:      mvn(org.bouncycastle:bcprov-jdk15on) = %{version}
