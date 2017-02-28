@@ -1,0 +1,19 @@
+--- bcpg-jdk15on-154/build.xml
++++ bcpg-jdk15on-154/build.xml
+@@ -206,12 +206,13 @@
+   </taskdef>
+   
+   <target name="package" depends="compile,test" description="Package the application">
+-    <bnd
++    <jar basedir="${build.classes}" destfile="${build.dir}/${jar.name}.jar" />
++    <!--bnd
+          classpath="${build.classes}"
+          failok="false"
+          exceptions="false"
+          files="bcpg.bnd"
+-         output="${build.dir}/${jar.name}.jar"/>
++         output="${build.dir}/${jar.name}.jar"/-->
+   </target>
+ 
+   <!-- ====================================================================== -->
+

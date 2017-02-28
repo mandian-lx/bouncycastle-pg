@@ -19,6 +19,7 @@ Source1:       http://www.bouncycastle.org/download/bctest-%{archivever}.jar
 Source2:       http://repo2.maven.org/maven2/org/bouncycastle/bcpg-jdk15on/%{version}/bcpg-jdk15on-%{version}.pom
 Source3:       bouncycastle-pg-build.xml
 Source4:       bouncycastle-pg-OSGi.bnd
+Patch0:        %{name}-1.54-fix_missing_bnd.patch
 
 BuildRequires: ant
 BuildRequires: ant-junit
@@ -65,6 +66,9 @@ cp -p %{SOURCE3} build.xml
 cp -p %{SOURCE4} bcpg.bnd
 sed -i "s|@VERSION@|%{version}|" build.xml bcpg.bnd
 
+# fix missing /usr/bin/bnd
+%patch0 -p1 -b .orig
+
 # this test fails: source encoding error
 rm src/test/org/bouncycastle/openpgp/test/PGPUnicodeTest.java
 sed -i "s|suite.addTestSuite(PGPUnicodeTest.class);|//&|" \
@@ -74,6 +78,8 @@ sed -i "s|suite.addTestSuite(PGPUnicodeTest.class);|//&|" \
 mkdir lib
 build-jar-repository -s -p lib bcprov junit ant/ant-junit aqute-bnd
 ant -Dbc.test.data.home=$(pwd)/src/test jar javadoc
+java -jar $(build-classpath aqute-bnd) wrap -properties bcpg.bnd build/bcpg.jar
+mv bcpg.bar build/bcpg.jar
 
 %install
 %mvn_file org.bouncycastle:bcpg-jdk15on bcpg
